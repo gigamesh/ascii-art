@@ -1,4 +1,3 @@
-var webcamVideo = document.getElementById("webcamVideo");
 var userVideo = document.getElementById("userVideo");
 var defaultVideo = document.getElementById("defaultVideo");
 
@@ -15,14 +14,6 @@ const ctx2 = canvasRaw.getContext("2d", {
 //canvas for pixelated grayscale images
 const canvasPixel = document.getElementById("canvas-video-pixel");
 const ctx3 = canvasPixel.getContext("2d");
-
-var webcamAspectRatio = 1;
-var webcamVideoMaxWidth = 1080;
-var resizedWebcamWidth = Math.min(
-  webcamVideoMaxWidth,
-  Math.floor(window.innerWidth)
-);
-var resizedWebcamHeight = Math.round(resizedWebcamWidth / webcamAspectRatio);
 
 var defaultVideoWidth = 480;
 var defaultVideoHeight = 848;
@@ -62,7 +53,6 @@ var startingRowArray = [];
 var animationRequest;
 var playAnimationToggle = false;
 var counter = 0;
-var webcamStream;
 
 var mediaRecorder;
 var recordedChunks;
@@ -91,9 +81,8 @@ var obj = {
   animationType: "Random Text",
 };
 
-var videoType = "Default";
+var videoType = "DEFAULT_VID";
 var animationType = obj.animationType;
-
 var backgroundColor = obj.backgroundColor;
 var backgroundRGB = hexToRgb(backgroundColor);
 var backgroundHue = getHueFromHex(backgroundColor);
@@ -116,16 +105,10 @@ gui.close();
 var guiOpenToggle = false;
 
 obj["selectVideo"] = function () {
-  videoType = "Select Video";
+  videoType = "UPLOADED_VIDEO";
   fileInput.click();
 };
 gui.add(obj, "selectVideo").name("Upload Video");
-
-obj["useWebcam"] = function () {
-  videoType = "Webcam";
-  changeVideoType();
-};
-gui.add(obj, "useWebcam").name("Use Webcam");
 
 gui
   .addColor(obj, "backgroundColor")
@@ -200,12 +183,6 @@ var guiCloseButton = document.getElementsByClassName("close-button");
 console.log(guiCloseButton.length);
 guiCloseButton[0].addEventListener("click", updateGUIState);
 
-var useWebcamButton = document.getElementById("useWebcamButton");
-useWebcamButton.addEventListener("click", function () {
-  videoType = "Webcam";
-  changeVideoType();
-});
-
 //turn video input into still images, and then into pixelated grayscale values
 const render = (ctx) => {
   if (canvasWidth && canvasHeight) {
@@ -213,11 +190,9 @@ const render = (ctx) => {
     canvasRaw.height = canvasHeight;
 
     //choose video feed
-    if (videoType == "Webcam") {
-      ctx2.drawImage(webcamVideo, 0, 0, canvasWidth, canvasHeight);
-    } else if (videoType == "Select Video") {
+    if (videoType == "UPLOADED_VIDEO") {
       ctx2.drawImage(userVideo, 0, 0, canvasWidth, canvasHeight);
-    } else if (videoType == "Default") {
+    } else if (videoType == "DEFAULT_VID") {
       ctx2.drawImage(defaultVideo, 0, 0, canvasWidth, canvasHeight);
     }
 
@@ -421,11 +396,9 @@ function loop() {
 
     if (effectWidth < 1) {
       //draw the chosen video onto the final canvas
-      if (videoType == "Webcam") {
-        ctx.drawImage(webcamVideo, 0, 0, canvasWidth, canvasHeight);
-      } else if (videoType == "Select Video") {
+      if (videoType == "UPLOADED_VIDEO") {
         ctx.drawImage(userVideo, 0, 0, canvasWidth, canvasHeight);
-      } else if (videoType == "Default") {
+      } else if (videoType == "DEFAULT_VID") {
         ctx.drawImage(defaultVideo, 0, 0, canvasWidth, canvasHeight);
       }
     }
@@ -449,7 +422,7 @@ function loop() {
 //HELPER FUNCTIONS BELOW
 
 function selectVideo() {
-  videoType = "Select Video";
+  videoType = "UPLOADED_VIDEO";
   fileInput.click();
 }
 
@@ -511,14 +484,12 @@ function refresh() {
 
 function togglePausePlay() {
   if (playAnimationToggle == false) {
-    if (videoType == "Webcam") {
-      startWebcam();
-    } else if (videoType == "Select Video") {
+    if (videoType == "UPLOADED_VIDEO") {
       refresh();
       userVideo.play();
       playAnimationToggle = true;
       animationRequest = requestAnimationFrame(loop);
-    } else if (videoType == "Default") {
+    } else if (videoType == "DEFAULT_VID") {
       startDefaultVideo();
     }
   } else {
@@ -529,12 +500,10 @@ function togglePausePlay() {
 function changeVideoType() {
   stopVideo();
 
-  if (videoType == "Webcam") {
-    startWebcam();
-  } else if (videoType == "Select Video") {
+  if (videoType == "UPLOADED_VIDEO") {
     console.log("select video file");
     selectVideo();
-  } else if (videoType == "Default") {
+  } else if (videoType == "DEFAULT_VID") {
     startDefaultVideo();
   }
 
@@ -548,64 +517,12 @@ function startDefaultVideo() {
     console.log("cancel animation");
   }
 
-  canvasWidth = defaultVideoWidth;
-  canvasHeight = defaultVideoHeight;
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
   defaultVideo.play();
   playAnimationToggle = true;
   animationRequest = requestAnimationFrame(loop);
-}
-
-function startWebcam() {
-  if (playAnimationToggle == true) {
-    playAnimationToggle = false;
-    cancelAnimationFrame(animationRequest);
-    console.log("cancel animation");
-  }
-
-  navigator.mediaDevices
-    .getUserMedia({
-      audio: false,
-      video: true,
-    })
-    .then((stream) => {
-      window.localStream = stream;
-      webcamVideo.srcObject = stream;
-      webcamVideo.play();
-      if (isIOS || isAndroid) {
-        webcamAspectRatio = 3 / 4;
-      } else {
-        webcamAspectRatio = stream
-          .getVideoTracks()[0]
-          .getSettings().aspectRatio;
-      }
-
-      if (webcamAspectRatio == undefined) {
-        webcamAspectRatio = 1.33333;
-      }
-      console.log("Aspect Ratio: " + webcamAspectRatio);
-
-      resizedWebcamWidth = Math.min(
-        webcamVideoMaxWidth,
-        Math.floor(window.innerWidth)
-      );
-      resizedWebcamHeight = Math.round(resizedWebcamWidth / webcamAspectRatio);
-
-      canvasWidth = resizedWebcamWidth;
-      canvasHeight = resizedWebcamHeight;
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      refresh();
-
-      playAnimationToggle = true;
-      animationRequest = requestAnimationFrame(loop);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
 }
 
 var localStream;
@@ -616,14 +533,8 @@ function stopVideo() {
     console.log("cancel animation");
   }
 
-  webcamVideo.pause();
   userVideo.pause();
   defaultVideo.pause();
-
-  if (localStream == null) {
-  } else {
-    localStream.getVideoTracks()[0].stop();
-  }
 }
 
 var fileInput = document.getElementById("fileInput");
@@ -634,7 +545,7 @@ fileInput.addEventListener("change", (e) => {
     console.log("cancel animation");
   }
 
-  videoType = "Select Video";
+  videoType = "UPLOADED_VIDEO";
 
   const file = e.target.files[0];
   const url = URL.createObjectURL(file);
