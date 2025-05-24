@@ -1,3 +1,53 @@
+const lyrics = [
+  { time: 208.33, word: "I'll " },
+  { time: 416.67, word: 'give ' },
+  { time: 666.67, word: 'it ' },
+  { time: 833.33, word: 'to ' },
+  { time: 1000, word: 'you ' },
+  { time: 1208.33, word: 'straight ' },
+  { time: 1958.33, word: 'I ' },
+  { time: 2208.33, word: 'think ' },
+  { time: 2458.33, word: 'that ' },
+  { time: 2625, word: 'you ' },
+  { time: 2791.67, word: 'should ' },
+  { time: 3000, word: 'know ' },
+  { time: 3791.67, word: "you're " },
+  { time: 4000, word: 'gonna ' },
+  { time: 4333.33, word: 'find ' },
+  { time: 4833.33, word: 'out ' },
+  { time: 5208.33, word: "she's " },
+  { time: 5500, word: 'a ' },
+  { time: 5708.33, word: 'savage ' },
+  { time: 6208.33, word: 'on ' },
+  { time: 6458.33, word: 'the ' },
+  { time: 6583.33, word: 'floor ' },
+  { time: 7291.67, word: 'so ' },
+  { time: 7541.67, word: 'turn ' },
+  { time: 7791.67, word: 'the ' },
+  { time: 8041.67, word: 'lights ' },
+  { time: 8458.33, word: 'out ' },
+  { time: 8916.67, word: 'pull ' },
+  { time: 9125, word: 'the ' },
+  { time: 9250, word: 'shades ' },
+  { time: 9625, word: 'and ' },
+  { time: 9750, word: 'lock ' },
+  { time: 9958.33, word: 'the ' },
+  { time: 10250, word: 'door ' },
+  { time: 10958.33, word: 'you ' },
+  { time: 11208.33, word: 'better ' },
+  { time: 11625, word: 'stand ' },
+  { time: 12083.33, word: 'back ' },
+  { time: 12416.67, word: "she's " },
+  { time: 12708.33, word: 'a ' },
+  { time: 12916.67, word: 'savage ' },
+  { time: 13416.67, word: 'on ' },
+  { time: 13666.67, word: 'the ' },
+  { time: 13833.33, word: 'floor ' },
+  { time: 15000, word: 'SAVAGE ' },
+];
+
+const RANDOM_STRING = 'Tw%T8bWYmCLf2BHtnf6L';
+
 const userVideo = document.getElementById('userVideo');
 const defaultVideo = document.getElementById('defaultVideo');
 
@@ -62,20 +112,41 @@ let muxer;
 const videofps = 12;
 let frameNumber = 0;
 
+// Lyrics synchronization variables
+let currentLyricsIndex = 0;
+let accumulatedLyrics = '';
+let initialRandomText = RANDOM_STRING;
+
+// Function to update lyrics based on video time
+function updateLyricsSync() {
+  let currentVideo = videoType === 'UPLOADED_VIDEO' ? userVideo : defaultVideo;
+  let currentTime = currentVideo.currentTime * 1000; // Convert to milliseconds
+
+  // Check if we need to update to the next lyric
+  if (
+    currentLyricsIndex < lyrics.length &&
+    currentTime >= lyrics[currentLyricsIndex].time
+  ) {
+    obj.textInput = lyrics[currentLyricsIndex].word;
+    textInput = lyrics[currentLyricsIndex].word;
+    currentLyricsIndex++;
+  }
+}
+
 // CREATE USER GUI MENU
 const obj = {
   backgroundColor: '#080c37',
-  backgroundGradient: true,
-  backgroundSaturation: 60,
-  fontColor: '#c7205b',
-  fontColor2: '#0032ff',
-  fontSizeFactor: 3,
-  pixelSizeFactor: 70,
-  threshold: 30,
-  textInput: 'wavesand',
-  randomness: 15,
+  backgroundGradient: false,
+  backgroundSaturation: 90,
+  fontColor: '#6a0000',
+  fontColor2: '#ffffff',
+  fontSizeFactor: 4,
+  pixelSizeFactor: 50,
+  threshold: 3,
+  textInput: initialRandomText, // Start with random text
+  randomness: 2,
   invert: false,
-  animationType: 'Random Text',
+  animationType: 'User Text',
 };
 
 let videoType = 'DEFAULT_VID';
@@ -383,6 +454,10 @@ function loop() {
   }
   if (playAnimationToggle) {
     counter++;
+
+    // Update lyrics synchronization
+    updateLyricsSync();
+
     render(ctx);
 
     if (effectWidth < 1) {
@@ -474,6 +549,14 @@ function refresh() {
   }
 }
 
+function resetLyricsSync() {
+  currentLyricsIndex = 0;
+  accumulatedLyrics = '';
+  initialRandomText = RANDOM_STRING;
+  obj.textInput = initialRandomText;
+  textInput = initialRandomText;
+}
+
 function togglePausePlay() {
   if (playAnimationToggle == false) {
     if (videoType == 'UPLOADED_VIDEO') {
@@ -509,6 +592,9 @@ function startDefaultVideo() {
     console.log('cancel animation');
   }
 
+  // Reset lyrics synchronization when starting video
+  resetLyricsSync();
+
   // Set canvas dimensions from default video
   if (defaultVideo.videoWidth && defaultVideo.videoHeight) {
     setCanvasDimensionsFromVideo(defaultVideo);
@@ -541,6 +627,9 @@ fileInput.addEventListener('change', (e) => {
   }
 
   videoType = 'UPLOADED_VIDEO';
+
+  // Reset lyrics synchronization for uploaded video
+  resetLyricsSync();
 
   const file = e.target.files[0];
   const url = URL.createObjectURL(file);
@@ -702,6 +791,9 @@ function toggleGUI() {
 function toggleVideoRecord() {
   userVideo.currentTime = 0;
   defaultVideo.currentTime = 0;
+
+  // Reset lyrics when starting video recording
+  resetLyricsSync();
 
   setTimeout(function () {
     if (recordVideoState == false) {
