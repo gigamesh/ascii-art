@@ -15,10 +15,8 @@ const ctx2 = canvasRaw.getContext('2d', {
 const canvasPixel = document.getElementById('canvas-video-pixel');
 const ctx3 = canvasPixel.getContext('2d');
 
-const defaultVideoWidth = 480;
-const defaultVideoHeight = 848;
-let canvasWidth = defaultVideoWidth;
-let canvasHeight = defaultVideoHeight;
+let canvasWidth = 1080;
+let canvasHeight = 1920;
 
 const maxCanvasWidth = 1080;
 
@@ -181,6 +179,21 @@ customContainer.appendChild(gui.domElement);
 const guiCloseButton = document.getElementsByClassName('close-button');
 console.log(guiCloseButton.length);
 guiCloseButton[0].addEventListener('click', updateGUIState);
+
+// Helper function to set canvas dimensions based on video
+function setCanvasDimensionsFromVideo(video) {
+  canvasWidth = Math.min(video.videoWidth, maxCanvasWidth);
+  canvasHeight = Math.floor(
+    canvasWidth * (video.videoHeight / video.videoWidth)
+  );
+
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  console.log(
+    `Canvas dimensions set to: ${canvasWidth} x ${canvasHeight} from video: ${video.videoWidth} x ${video.videoHeight}`
+  );
+}
 
 // turn video input into still images, and then into pixelated grayscale values
 const render = (ctx) => {
@@ -496,10 +509,13 @@ function startDefaultVideo() {
     console.log('cancel animation');
   }
 
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
+  // Set canvas dimensions from default video
+  if (defaultVideo.videoWidth && defaultVideo.videoHeight) {
+    setCanvasDimensionsFromVideo(defaultVideo);
+  }
 
   defaultVideo.play();
+  refresh();
   playAnimationToggle = true;
   animationRequest = requestAnimationFrame(loop);
 }
@@ -536,13 +552,7 @@ fileInput.addEventListener('change', (e) => {
       `user video width/height: ${userVideo.width}, ${userVideo.height}`
     );
 
-    canvasWidth = Math.min(userVideo.videoWidth, maxCanvasWidth);
-    canvasHeight = Math.floor(
-      canvasWidth * (userVideo.videoHeight / userVideo.videoWidth)
-    );
-
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+    setCanvasDimensionsFromVideo(userVideo);
   });
 
   setTimeout(function () {
@@ -551,6 +561,14 @@ fileInput.addEventListener('change', (e) => {
     playAnimationToggle = true;
     animationRequest = requestAnimationFrame(loop);
   }, 2000);
+});
+
+// Add event listener for default video metadata
+defaultVideo.addEventListener('loadedmetadata', () => {
+  console.log(
+    `default video width/height: ${defaultVideo.videoWidth}, ${defaultVideo.videoHeight}`
+  );
+  setCanvasDimensionsFromVideo(defaultVideo);
 });
 
 function getAverageColor(chosenPixels) {
