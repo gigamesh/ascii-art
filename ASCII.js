@@ -1,13 +1,3 @@
-/*
-To do:
-Allow toggle for different monospace fonts (Japanese, bolder font, etc.)
-Allow image upload, with function to determine based on the file extension and handle accordingly
-When image is uploaded, use a new function that accepts the image and then runs scanLines algo on it -- as pseudo video feed
-Investigate frame rate unsynced issue when video recording -- video export can have dropped frames / uneven time / low quality
-Allow custom char set during Random Text mode (so that you can try with only a few chars)
-Add button that exports the relevant chars / line breaks into a textfield, for a specific frame
-*/
-
 var webcamVideo = document.getElementById("webcamVideo");
 var userVideo = document.getElementById("userVideo");
 var defaultVideo = document.getElementById("defaultVideo");
@@ -64,9 +54,6 @@ var fontSize;
 
 //this defines the character set. ordered by darker to lighter colour
 const gradient = "____``..--^^~~<>??123456789%%&&@@";
-//const gradient = "_______.:!/r(l1Z4H9W8$@";
-//const gradient =  "`.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@"
-//const gradient =  "`.-':_,^=;<+!rc*/z?sTv7(|Fi{C}fI31tu[neoZ5xjya]2EwqkP6h94VpOGbUKXHm8R#$Bg0NW%&@"
 const preparedGradient = gradient.replaceAll("_", "\u00A0");
 
 var randomColumnArray = [];
@@ -85,38 +72,8 @@ var recordVideoState = false;
 var videoRecordInterval;
 var videoEncoder;
 var muxer;
-var mobileRecorder;
 var videofps = 12;
 var frameNumber = 0;
-
-//detect user browser
-var ua = navigator.userAgent;
-var isSafari = false;
-var isFirefox = false;
-var isIOS = false;
-var isAndroid = false;
-if (ua.includes("Safari")) {
-  isSafari = true;
-}
-if (ua.includes("Firefox")) {
-  isFirefox = true;
-}
-if (ua.includes("iPhone") || ua.includes("iPad") || ua.includes("iPod")) {
-  isIOS = true;
-}
-if (ua.includes("Android")) {
-  isAndroid = true;
-}
-console.log(
-  "isSafari: " +
-    isSafari +
-    ", isFirefox: " +
-    isFirefox +
-    ", isIOS: " +
-    isIOS +
-    ", isAndroid: " +
-    isAndroid
-);
 
 //CREATE USER GUI MENU
 var obj = {
@@ -300,13 +257,6 @@ const render = (ctx) => {
         }
 
         var avgColor = getAverageColor(cellPixels);
-        //ctx3.fillStyle = `rgba(${avgColor[0]}, ${avgColor[1]}, ${avgColor[2]}, ${alpha})`;
-        //ctx3.fillRect(cellX*pixelSize, cellY*pixelSize, pixelSize, pixelSize);
-
-        //videoPixels.push(avgColor[0]);
-        //videoPixels.push(avgColor[1]);
-        //videoPixels.push(avgColor[2]);
-        //videoPixels.push(alpha);
 
         var grayScaleValue =
           0.299 * avgColor[0] + 0.587 * avgColor[1] + 0.114 * avgColor[2]; //perceived luminosity value
@@ -445,8 +395,6 @@ function renderText() {
               (1 - adjustedThreshold)
           );
           ctx.fillText(char, col * pixelSize, row * pixelSize + pixelSize);
-          //ctx.strokeStyle = fontColor;
-          //ctx.strokeText(char, col*pixelSize + pixelSize/4, row*(pixelSize) + pixelSize/2);
         }
       } else {
         if (currentGrayValue / 255 < 1 - adjustedThreshold) {
@@ -520,7 +468,6 @@ function refresh() {
   document
     .getElementById("canvasDiv")
     .setAttribute("style", "width: " + canvasWidth + "px;");
-  //effectWidthInput.style.width = canvasWidth;
   effectWidth = Number(effectWidthInput.value) / 100;
   effectWidthLabel.innerHTML =
     "Effect Width: " + Math.round(effectWidth * 100) + "%";
@@ -827,32 +774,6 @@ function rgbToHex(r, g, b) {
   );
 }
 
-/*
-//shortcut hotkey presses
-document.addEventListener('keydown', function(event) {
-  
-    if(event.shiftKey && event.key == 'p'){
-        togglePausePlay();
-    } else if (event.key === 'i' && event.shiftKey) {
-        saveImage();
-    } else if (event.key === 'v' && event.shiftKey) {
-        toggleVideoRecord();
-    } else if (event.key === 'o' && event.shiftKey) {
-        dat.GUI.toggleHide();
-    } 
-   
-});
-
-//shortcut hotkey presses
-document.addEventListener('keydown', function(event) {
-  
-    if(event.key === 'h') {
-        toggleGUI();
-    } 
-   
-});
-*/
-
 function saveImage() {
   const link = document.createElement("a");
   link.href = canvas.toDataURL();
@@ -880,28 +801,12 @@ function toggleVideoRecord() {
   setTimeout(function () {
     if (recordVideoState == false) {
       recordVideoState = true;
-      chooseRecordingFunction();
+      recordVideoMuxer();
     } else {
       recordVideoState = false;
-      chooseEndRecordingFunction();
+      finalizeVideo();
     }
   }, 250);
-}
-
-function chooseRecordingFunction() {
-  if (isIOS || isAndroid || isFirefox) {
-    startMobileRecording();
-  } else {
-    recordVideoMuxer();
-  }
-}
-
-function chooseEndRecordingFunction() {
-  if (isIOS || isAndroid || isFirefox) {
-    mobileRecorder.stop();
-  } else {
-    finalizeVideo();
-  }
 }
 
 //record html canvas element and export as mp4 video
@@ -961,28 +866,6 @@ async function recordVideoMuxer() {
   });
   //NEW codec: "avc1.42003e",
   //ORIGINAL codec: "avc1.42001f",
-
-  /*
-    var frameNumber = 0;
-    //setTimeout(finalizeVideo,1000*videoDuration+200); //finish and export video after x seconds
-    */
-
-  /*
-    //take a snapshot of the canvas every x miliseconds and encode to video
-    videoRecordInterval = setInterval(
-        function(){
-            if(recordVideoState == true){
-                renderCanvasToVideoFrameAndEncode({
-                    canvas,
-                    videoEncoder,
-                    frameNumber,
-                    videofps
-                })
-                frameNumber++;
-            }else{
-            }
-        } , 1000/videofps);
-    */
 }
 
 //finish and export video
@@ -1031,44 +914,6 @@ function downloadBlob() {
   document.body.appendChild(a);
   a.click();
   window.URL.revokeObjectURL(url);
-}
-
-//record and download videos on mobile devices
-function startMobileRecording() {
-  var stream = canvas.captureStream(videofps);
-  mobileRecorder = new MediaRecorder(stream, { type: "video/mp4" });
-  mobileRecorder.addEventListener("dataavailable", finalizeMobileVideo);
-
-  console.log("start simple video recording");
-  console.log("Video dimensions: " + canvas.width + ", " + canvas.height);
-
-  //display user message
-  //recordingMessageCountdown(videoDuration);
-  recordingMessageDiv.classList.remove("hidden");
-
-  recordVideoState = true;
-  mobileRecorder.start(); //start mobile video recording
-
-  /*
-    setTimeout(function() {
-        recorder.stop();
-    }, 1000*videoDuration+200);
-    */
-}
-
-function finalizeMobileVideo(e) {
-  setTimeout(function () {
-    console.log("finish simple video recording");
-    recordVideoState = false;
-    /*
-    mobileRecorder.stop();*/
-    var videoData = [e.data];
-    finishedBlob = new Blob(videoData, { type: "video/mp4" });
-    downloadBlob(finishedBlob);
-
-    //hide user message
-    recordingMessageDiv.classList.add("hidden");
-  }, 500);
 }
 
 //MAIN METHOD
