@@ -12,6 +12,16 @@ const DEFAULT_CANVAS_HEIGHT = 1920;
 // const RANDOM_STRING = 'Tw%T8bWYmCLf2BHtnf6L';
 const RANDOM_STRING = 'SAVAGE:';
 
+// Oscillation function
+function oscillate(minValue, maxValue, periodSeconds, timeOffset = 0) {
+  const currentTime = Date.now() / 1000; // Convert to seconds
+  const adjustedTime = currentTime + timeOffset;
+  const phase = (adjustedTime % periodSeconds) / periodSeconds; // 0 to 1
+  const oscillationValue = Math.sin(phase * 2 * Math.PI); // -1 to 1
+  const normalizedValue = (oscillationValue + 1) / 2; // 0 to 1
+  return minValue + normalizedValue * (maxValue - minValue);
+}
+
 const lyrics = [
   // { time: 208.33, word: "I'll_" },
   // { time: 416.67, word: 'give_' },
@@ -479,6 +489,17 @@ function loop() {
 
     // Update lyrics synchronization
     updateLyricsSync();
+
+    // Update pixelSizeFactor with oscillation (10 to 140 over 3 seconds)
+    pixelSizeFactor = oscillate(10, 140, 4);
+
+    // Recalculate pixel size and grid dimensions based on oscillating pixelSizeFactor
+    pixelSize = Math.ceil(
+      Math.min(canvasWidth, canvasHeight) / pixelSizeFactor
+    );
+    numCols = Math.ceil(Math.ceil(canvasWidth / pixelSize) * effectWidth);
+    numRows = Math.ceil(canvasHeight / pixelSize);
+    fontSize = pixelSize / 0.65;
 
     render(ctx);
 
