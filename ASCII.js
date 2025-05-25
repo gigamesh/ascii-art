@@ -1,52 +1,64 @@
-const lyrics = [
-  { time: 208.33, word: "I'll " },
-  { time: 416.67, word: 'give ' },
-  { time: 666.67, word: 'it ' },
-  { time: 833.33, word: 'to ' },
-  { time: 1000, word: 'you ' },
-  { time: 1208.33, word: 'straight ' },
-  { time: 1958.33, word: 'I ' },
-  { time: 2208.33, word: 'think ' },
-  { time: 2458.33, word: 'that ' },
-  { time: 2625, word: 'you ' },
-  { time: 2791.67, word: 'should ' },
-  { time: 3000, word: 'know ' },
-  { time: 3791.67, word: "you're " },
-  { time: 4000, word: 'gonna ' },
-  { time: 4333.33, word: 'find ' },
-  { time: 4833.33, word: 'out ' },
-  { time: 5208.33, word: "she's " },
-  { time: 5500, word: 'a ' },
-  { time: 5708.33, word: 'savage ' },
-  { time: 6208.33, word: 'on ' },
-  { time: 6458.33, word: 'the ' },
-  { time: 6583.33, word: 'floor ' },
-  { time: 7291.67, word: 'so ' },
-  { time: 7541.67, word: 'turn ' },
-  { time: 7791.67, word: 'the ' },
-  { time: 8041.67, word: 'lights ' },
-  { time: 8458.33, word: 'out ' },
-  { time: 8916.67, word: 'pull ' },
-  { time: 9125, word: 'the ' },
-  { time: 9250, word: 'shades ' },
-  { time: 9625, word: 'and ' },
-  { time: 9750, word: 'lock ' },
-  { time: 9958.33, word: 'the ' },
-  { time: 10250, word: 'door ' },
-  { time: 10958.33, word: 'you ' },
-  { time: 11208.33, word: 'better ' },
-  { time: 11625, word: 'stand ' },
-  { time: 12083.33, word: 'back ' },
-  { time: 12416.67, word: "she's " },
-  { time: 12708.33, word: 'a ' },
-  { time: 12916.67, word: 'savage ' },
-  { time: 13416.67, word: 'on ' },
-  { time: 13666.67, word: 'the ' },
-  { time: 13833.33, word: 'floor ' },
-  { time: 15000, word: 'SAVAGE ' },
-];
+// CONFIG CONSTANTS
+const VIDEO_TYPE_UPLOADED = 'UPLOADED_VIDEO';
+const VIDEO_TYPE_DEFAULT = 'DEFAULT_VID';
+const ANIMATION_TYPE_RANDOM = 'Random Text';
+const ANIMATION_TYPE_USER = 'User Text';
+const FONT_FAMILY = 'Helvetica';
+const GRADIENT_CHARS = '____``..--^^~~<>??123456789%%&&@@';
+const VIDEO_FPS = 12;
+const MAX_CANVAS_WIDTH = 1080;
+const DEFAULT_CANVAS_WIDTH = 1080;
+const DEFAULT_CANVAS_HEIGHT = 1920;
+// const RANDOM_STRING = 'Tw%T8bWYmCLf2BHtnf6L';
+const RANDOM_STRING = 'SAVAGE:';
 
-const RANDOM_STRING = 'Tw%T8bWYmCLf2BHtnf6L';
+const lyrics = [
+  // { time: 208.33, word: "I'll_" },
+  // { time: 416.67, word: 'give_' },
+  // { time: 666.67, word: 'it_' },
+  // { time: 833.33, word: 'to_' },
+  // { time: 1000, word: 'you_' },
+  // { time: 1208.33, word: 'straight_' },
+  // { time: 1958.33, word: 'I_' },
+  // { time: 2208.33, word: 'think_' },
+  // { time: 2458.33, word: 'that_' },
+  // { time: 2625, word: 'you_' },
+  // { time: 2791.67, word: 'should_' },
+  // { time: 3000, word: 'know_' },
+  // { time: 3791.67, word: "you're_" },
+  // { time: 4000, word: 'gonna_' },
+  // { time: 4333.33, word: 'find_' },
+  // { time: 4833.33, word: 'out_' },
+  // { time: 5208.33, word: "she's_" },
+  // { time: 5500, word: 'a_' },
+  // { time: 5708.33, word: 'savage_' },
+  // { time: 6208.33, word: 'on_' },
+  // { time: 6458.33, word: 'the_' },
+  // { time: 6583.33, word: 'floor_' },
+  // { time: 7291.67, word: 'so_' },
+  // { time: 7541.67, word: 'turn_' },
+  // { time: 7791.67, word: 'the_' },
+  // { time: 8041.67, word: 'lights_' },
+  // { time: 8458.33, word: 'out_' },
+  // { time: 8916.67, word: 'pull_' },
+  // { time: 9125, word: 'the_' },
+  // { time: 9250, word: 'shades_' },
+  // { time: 9625, word: 'and_' },
+  // { time: 9750, word: 'lock_' },
+  // { time: 9958.33, word: 'the_' },
+  // { time: 10250, word: 'door_' },
+  // { time: 10958.33, word: 'you_' },
+  // { time: 11208.33, word: 'better_' },
+  // { time: 11625, word: 'stand_' },
+  // { time: 12083.33, word: 'back_' },
+  // { time: 12416.67, word: "she's_" },
+  // { time: 12708.33, word: 'a_' },
+  // { time: 12916.67, word: 'savage_' },
+  // { time: 13416.67, word: 'on_' },
+  // { time: 13666.67, word: 'the_' },
+  // { time: 13833.33, word: 'floor_' },
+  { time: 15000, word: 'SAVAGE:' },
+];
 
 const userVideo = document.getElementById('userVideo');
 const defaultVideo = document.getElementById('defaultVideo');
@@ -65,10 +77,8 @@ const ctx2 = canvasRaw.getContext('2d', {
 const canvasPixel = document.getElementById('canvas-video-pixel');
 const ctx3 = canvasPixel.getContext('2d');
 
-let canvasWidth = 1080;
-let canvasHeight = 1920;
-
-const maxCanvasWidth = 1080;
+let canvasWidth = DEFAULT_CANVAS_WIDTH;
+let canvasHeight = DEFAULT_CANVAS_HEIGHT;
 
 let pixelSize;
 let numCols;
@@ -87,12 +97,10 @@ const effectWidthLabel = document.getElementById('effectWidthLabel');
 let videoPixels = [];
 let grayscaleDataArray = [];
 
-const fontFamily = 'Courier New';
 let fontSize;
 
 // this defines the character set. ordered by darker to lighter colour
-const gradient = '____``..--^^~~<>??123456789%%&&@@';
-const preparedGradient = gradient.replaceAll('_', '\u00A0');
+const preparedGradient = GRADIENT_CHARS.replaceAll('_', '\u00A0');
 
 let randomColumnArray = [];
 let startingRowArray = [];
@@ -109,7 +117,6 @@ let recordVideoState = false;
 let videoRecordInterval;
 let videoEncoder;
 let muxer;
-const videofps = 12;
 let frameNumber = 0;
 
 // Lyrics synchronization variables
@@ -119,8 +126,17 @@ let initialRandomText = RANDOM_STRING;
 
 // Function to update lyrics based on video time
 function updateLyricsSync() {
-  let currentVideo = videoType === 'UPLOADED_VIDEO' ? userVideo : defaultVideo;
+  let currentVideo =
+    videoType === VIDEO_TYPE_UPLOADED ? userVideo : defaultVideo;
   let currentTime = currentVideo.currentTime * 1000; // Convert to milliseconds
+
+  // Check if video has looped (current time is less than previous expected time)
+  if (
+    currentLyricsIndex > 0 &&
+    currentTime < lyrics[currentLyricsIndex - 1].time
+  ) {
+    resetLyricsSync();
+  }
 
   // Check if we need to update to the next lyric
   if (
@@ -135,21 +151,21 @@ function updateLyricsSync() {
 
 // CREATE USER GUI MENU
 const obj = {
-  backgroundColor: '#080c37',
+  backgroundColor: '#000000',
   backgroundGradient: false,
-  backgroundSaturation: 90,
-  fontColor: '#6a0000',
-  fontColor2: '#ffffff',
+  backgroundSaturation: 17,
+  fontColor: '#ca0606',
+  fontColor2: '#ca0606',
   fontSizeFactor: 4,
-  pixelSizeFactor: 50,
-  threshold: 3,
+  pixelSizeFactor: 60,
+  threshold: 12,
   textInput: initialRandomText, // Start with random text
   randomness: 2,
   invert: false,
-  animationType: 'User Text',
+  animationType: ANIMATION_TYPE_USER,
 };
 
-let videoType = 'DEFAULT_VID';
+let videoType = VIDEO_TYPE_DEFAULT;
 let animationType = obj.animationType;
 let backgroundColor = obj.backgroundColor;
 let backgroundRGB = hexToRgb(backgroundColor);
@@ -173,7 +189,7 @@ gui.close();
 let guiOpenToggle = false;
 
 obj['selectVideo'] = function () {
-  videoType = 'UPLOADED_VIDEO';
+  videoType = VIDEO_TYPE_UPLOADED;
   fileInput.click();
 };
 gui.add(obj, 'selectVideo').name('Upload Video');
@@ -224,7 +240,7 @@ gui
   .onChange(refresh);
 
 gui
-  .add(obj, 'animationType', ['Random Text', 'User Text'])
+  .add(obj, 'animationType', [ANIMATION_TYPE_RANDOM, ANIMATION_TYPE_USER])
   .name('Text Type')
   .onChange(refresh);
 gui.add(obj, 'textInput').onFinishChange(refresh);
@@ -253,7 +269,7 @@ guiCloseButton[0].addEventListener('click', updateGUIState);
 
 // Helper function to set canvas dimensions based on video
 function setCanvasDimensionsFromVideo(video) {
-  canvasWidth = Math.min(video.videoWidth, maxCanvasWidth);
+  canvasWidth = Math.min(video.videoWidth, MAX_CANVAS_WIDTH);
   canvasHeight = Math.floor(
     canvasWidth * (video.videoHeight / video.videoWidth)
   );
@@ -273,9 +289,9 @@ const render = (ctx) => {
     canvasRaw.height = canvasHeight;
 
     // choose video feed
-    if (videoType == 'UPLOADED_VIDEO') {
+    if (videoType == VIDEO_TYPE_UPLOADED) {
       ctx2.drawImage(userVideo, 0, 0, canvasWidth, canvasHeight);
-    } else if (videoType == 'DEFAULT_VID') {
+    } else if (videoType == VIDEO_TYPE_DEFAULT) {
       ctx2.drawImage(defaultVideo, 0, 0, canvasWidth, canvasHeight);
     }
 
@@ -328,10 +344,9 @@ const render = (ctx) => {
 };
 
 const getCharByScale = (scale) => {
-  const val = Math.floor((scale / 255) * (gradient.length - 1));
+  const val = Math.floor((scale / 255) * (GRADIENT_CHARS.length - 1));
   return preparedGradient[val];
 };
-
 // draw the text and background color for each frame onto the final canvas
 function renderText() {
   ctx.fillStyle = backgroundColor;
@@ -396,9 +411,9 @@ function renderText() {
       } else if (Math.random() < 0.005 * randomness) {
         char =
           preparedGradient[Math.floor(Math.random() * preparedGradient.length)]; // draw random char
-      } else if (animationType == 'Random Text') {
+      } else if (animationType == ANIMATION_TYPE_RANDOM) {
         char = getCharByScale(currentGrayValue);
-      } else if (animationType == 'User Text') {
+      } else if (animationType == ANIMATION_TYPE_USER) {
         char = textInput[(row * numCols + col) % textInput.length];
         if (invertToggle) {
           currentFontSize = Math.min(
@@ -420,8 +435,15 @@ function renderText() {
         }
       }
 
+      // Apply randomness to font size
+      const fontSizeVariation = 1 + (Math.random() - 0.5) * randomness * 0.5;
+      currentFontSize = Math.max(
+        1,
+        Math.floor(currentFontSize * fontSizeVariation)
+      );
+
       // draw text onto canvas
-      ctx.font = `${currentFontSize}px ${fontFamily}`;
+      ctx.font = `${currentFontSize}px ${FONT_FAMILY}`;
 
       if (invertToggle == false) {
         if (currentGrayValue / 255 > adjustedThreshold) {
@@ -462,9 +484,9 @@ function loop() {
 
     if (effectWidth < 1) {
       // draw the chosen video onto the final canvas
-      if (videoType == 'UPLOADED_VIDEO') {
+      if (videoType == VIDEO_TYPE_UPLOADED) {
         ctx.drawImage(userVideo, 0, 0, canvasWidth, canvasHeight);
-      } else if (videoType == 'DEFAULT_VID') {
+      } else if (videoType == VIDEO_TYPE_DEFAULT) {
         ctx.drawImage(defaultVideo, 0, 0, canvasWidth, canvasHeight);
       }
     }
@@ -476,7 +498,7 @@ function loop() {
         canvas,
         videoEncoder,
         frameNumber,
-        videofps,
+        videofps: VIDEO_FPS,
       });
       frameNumber++;
     }
@@ -488,7 +510,7 @@ function loop() {
 // HELPER FUNCTIONS BELOW
 
 function selectVideo() {
-  videoType = 'UPLOADED_VIDEO';
+  videoType = VIDEO_TYPE_UPLOADED;
   fileInput.click();
 }
 
@@ -519,7 +541,7 @@ function refresh() {
   numCols = Math.ceil(Math.ceil(canvasWidth / pixelSize) * effectWidth);
   numRows = Math.ceil(canvasHeight / pixelSize);
   fontSize = pixelSize / 0.65;
-  ctx.font = `${fontSize}px ${fontFamily}`;
+  ctx.font = `${fontSize}px ${FONT_FAMILY}`;
 
   fontColor = obj.fontColor;
   fontColor2 = obj.fontColor2;
@@ -552,19 +574,18 @@ function refresh() {
 function resetLyricsSync() {
   currentLyricsIndex = 0;
   accumulatedLyrics = '';
-  initialRandomText = RANDOM_STRING;
-  obj.textInput = initialRandomText;
-  textInput = initialRandomText;
+  obj.textInput = RANDOM_STRING;
+  textInput = RANDOM_STRING;
 }
 
 function togglePausePlay() {
   if (playAnimationToggle == false) {
-    if (videoType == 'UPLOADED_VIDEO') {
+    if (videoType == VIDEO_TYPE_UPLOADED) {
       refresh();
       userVideo.play();
       playAnimationToggle = true;
       animationRequest = requestAnimationFrame(loop);
-    } else if (videoType == 'DEFAULT_VID') {
+    } else if (videoType == VIDEO_TYPE_DEFAULT) {
       startDefaultVideo();
     }
   } else {
@@ -575,10 +596,10 @@ function togglePausePlay() {
 function changeVideoType() {
   stopVideo();
 
-  if (videoType == 'UPLOADED_VIDEO') {
+  if (videoType == VIDEO_TYPE_UPLOADED) {
     console.log('select video file');
     selectVideo();
-  } else if (videoType == 'DEFAULT_VID') {
+  } else if (videoType == VIDEO_TYPE_DEFAULT) {
     startDefaultVideo();
   }
 
@@ -600,6 +621,7 @@ function startDefaultVideo() {
     setCanvasDimensionsFromVideo(defaultVideo);
   }
 
+  defaultVideo.loop = true; // Ensure video loops
   defaultVideo.play();
   refresh();
   playAnimationToggle = true;
@@ -626,7 +648,7 @@ fileInput.addEventListener('change', (e) => {
     console.log('cancel animation');
   }
 
-  videoType = 'UPLOADED_VIDEO';
+  videoType = VIDEO_TYPE_UPLOADED;
 
   // Reset lyrics synchronization for uploaded video
   resetLyricsSync();
@@ -645,6 +667,7 @@ fileInput.addEventListener('change', (e) => {
   });
 
   setTimeout(function () {
+    userVideo.loop = true; // Ensure uploaded video loops
     userVideo.play();
     refresh();
     playAnimationToggle = true;
@@ -658,6 +681,28 @@ defaultVideo.addEventListener('loadedmetadata', () => {
     `default video width/height: ${defaultVideo.videoWidth}, ${defaultVideo.videoHeight}`
   );
   setCanvasDimensionsFromVideo(defaultVideo);
+});
+
+// Add event listeners for video loop events
+defaultVideo.addEventListener('ended', () => {
+  console.log('Default video ended, resetting lyrics');
+  resetLyricsSync();
+});
+
+userVideo.addEventListener('ended', () => {
+  console.log('User video ended, resetting lyrics');
+  resetLyricsSync();
+});
+
+// Add seeked event listeners to handle manual seeking
+defaultVideo.addEventListener('seeked', () => {
+  console.log('Default video seeked, checking lyrics sync');
+  resetLyricsSync();
+});
+
+userVideo.addEventListener('seeked', () => {
+  console.log('User video seeked, checking lyrics sync');
+  resetLyricsSync();
 });
 
 function getAverageColor(chosenPixels) {
