@@ -13,9 +13,16 @@ const DEFAULT_CANVAS_HEIGHT = 1920;
 const RANDOM_STRING = 'SAVAGE:';
 
 // Oscillation function
-function oscillate(minValue, maxValue, periodSeconds, timeOffset = 0) {
-  const currentTime = Date.now() / 1000; // Convert to seconds
-  const adjustedTime = currentTime + timeOffset;
+function oscillateByVideoTime(
+  minValue,
+  maxValue,
+  periodSeconds,
+  timeOffset = 0
+) {
+  const currentVideo =
+    videoType === VIDEO_TYPE_UPLOADED ? userVideo : defaultVideo;
+  const videoTime = currentVideo.currentTime; // Use video time instead of real time
+  const adjustedTime = videoTime + timeOffset;
   const phase = (adjustedTime % periodSeconds) / periodSeconds; // 0 to 1
   const oscillationValue = Math.sin(phase * 2 * Math.PI); // -1 to 1
   const normalizedValue = (oscillationValue + 1) / 2; // 0 to 1
@@ -128,6 +135,9 @@ let videoRecordInterval;
 let videoEncoder;
 let muxer;
 let frameNumber = 0;
+let waitingToRecord = false;
+let autoStopRecording = false;
+let isRecording = false;
 
 // Lyrics synchronization variables
 let currentLyricsIndex = 0;
@@ -145,7 +155,7 @@ function updateLyricsSync() {
     currentLyricsIndex > 0 &&
     currentTime < lyrics[currentLyricsIndex - 1].time
   ) {
-    resetLyricsSync();
+    resetLoop();
   }
 
   // Check if we need to update to the next lyric
@@ -164,13 +174,13 @@ const obj = {
   backgroundColor: '#000000',
   backgroundGradient: false,
   backgroundSaturation: 17,
-  fontColor: '#ca0606',
-  fontColor2: '#ca0606',
-  fontSizeFactor: 4,
+  fontColor: '#ff0000',
+  fontColor2: '#ff0000',
+  fontSizeFactor: 5,
   pixelSizeFactor: 60,
-  threshold: 12,
+  threshold: 0,
   textInput: initialRandomText, // Start with random text
-  randomness: 2,
+  randomness: 5,
   invert: false,
   animationType: ANIMATION_TYPE_USER,
 };
@@ -266,9 +276,9 @@ obj['saveImage'] = function () {
 gui.add(obj, 'saveImage').name('Image Export');
 
 obj['saveVideo'] = function () {
-  toggleVideoRecord();
+  startAutoVideoRecord();
 };
-gui.add(obj, 'saveVideo').name('Start/Stop Video Export');
+gui.add(obj, 'saveVideo').name('Record Full Loop');
 
 const customContainer = document.getElementById('gui');
 customContainer.appendChild(gui.domElement);
@@ -483,17 +493,27 @@ function renderText() {
 function loop() {
   if (counter == 0) {
     console.log('start animation, first frame');
+
+    // Check if we're waiting to start recording and video just restarted
+    if (waitingToRecord) {
+      waitingToRecord = false;
+      recordVideoState = true;
+      isRecording = true;
+      recordVideoMuxer();
+      console.log('Video loop restarted - beginning recording');
+    }
   }
+
   if (playAnimationToggle) {
     counter++;
 
     // Update lyrics synchronization
     updateLyricsSync();
 
-    // Update pixelSizeFactor with oscillation (10 to 140 over 3 seconds)
-    pixelSizeFactor = oscillate(10, 140, 4);
+    // Use video-time based oscillation instead of real-time
+    pixelSizeFactor = oscillateByVideoTime(10, 140, 4);
 
-    // Recalculate pixel size and grid dimensions based on oscillating pixelSizeFactor
+    // Recalculate pixel size and grid dimensions
     pixelSize = Math.ceil(
       Math.min(canvasWidth, canvasHeight) / pixelSizeFactor
     );
@@ -513,16 +533,6 @@ function loop() {
     }
 
     renderText();
-
-    if (recordVideoState == true) {
-      renderCanvasToVideoFrameAndEncode({
-        canvas,
-        videoEncoder,
-        frameNumber,
-        videofps: VIDEO_FPS,
-      });
-      frameNumber++;
-    }
 
     animationRequest = requestAnimationFrame(loop);
   }
@@ -592,11 +602,12 @@ function refresh() {
   }
 }
 
-function resetLyricsSync() {
+function resetLoop() {
   currentLyricsIndex = 0;
   accumulatedLyrics = '';
   obj.textInput = RANDOM_STRING;
   textInput = RANDOM_STRING;
+  counter = 0;
 }
 
 function togglePausePlay() {
@@ -635,7 +646,7 @@ function startDefaultVideo() {
   }
 
   // Reset lyrics synchronization when starting video
-  resetLyricsSync();
+  resetLoop();
 
   // Set canvas dimensions from default video
   if (defaultVideo.videoWidth && defaultVideo.videoHeight) {
@@ -672,7 +683,7 @@ fileInput.addEventListener('change', (e) => {
   videoType = VIDEO_TYPE_UPLOADED;
 
   // Reset lyrics synchronization for uploaded video
-  resetLyricsSync();
+  resetLoop();
 
   const file = e.target.files[0];
   const url = URL.createObjectURL(file);
@@ -707,23 +718,23 @@ defaultVideo.addEventListener('loadedmetadata', () => {
 // Add event listeners for video loop events
 defaultVideo.addEventListener('ended', () => {
   console.log('Default video ended, resetting lyrics');
-  resetLyricsSync();
+  resetLoop();
 });
 
 userVideo.addEventListener('ended', () => {
   console.log('User video ended, resetting lyrics');
-  resetLyricsSync();
+  resetLoop();
 });
 
 // Add seeked event listeners to handle manual seeking
 defaultVideo.addEventListener('seeked', () => {
   console.log('Default video seeked, checking lyrics sync');
-  resetLyricsSync();
+  resetLoop();
 });
 
 userVideo.addEventListener('seeked', () => {
   console.log('User video seeked, checking lyrics sync');
-  resetLyricsSync();
+  resetLoop();
 });
 
 function getAverageColor(chosenPixels) {
@@ -854,12 +865,34 @@ function toggleGUI() {
   }
 }
 
+function startAutoVideoRecord() {
+  if (waitingToRecord || recordVideoState) {
+    console.log('Already recording or waiting to record');
+    return;
+  }
+
+  waitingToRecord = true;
+  autoStopRecording = true;
+
+  console.log('Waiting for video to restart loop before recording...');
+  recordingMessageDiv.innerHTML = 'Waiting for video loop to restart...';
+  recordingMessageDiv.classList.remove('hidden');
+
+  // Reset video to beginning and wait for it to restart
+  const currentVideo =
+    videoType === VIDEO_TYPE_UPLOADED ? userVideo : defaultVideo;
+  currentVideo.currentTime = 0;
+
+  // Reset lyrics when preparing to record
+  resetLoop();
+}
+
 function toggleVideoRecord() {
   userVideo.currentTime = 0;
   defaultVideo.currentTime = 0;
 
   // Reset lyrics when starting video recording
-  resetLyricsSync();
+  resetLoop();
 
   setTimeout(function () {
     if (recordVideoState == false) {
@@ -877,36 +910,40 @@ function toggleVideoRecord() {
 async function recordVideoMuxer() {
   console.log('start muxer video recording');
   const videoWidth = Math.floor(canvas.width / 2) * 2;
-  const videoHeight = Math.floor(canvas.height / 8) * 8; // force a number which is divisible by 8
+  const videoHeight = Math.floor(canvas.height / 8) * 8;
   console.log(`Video dimensions: ${videoWidth}, ${videoHeight}`);
 
   frameNumber = 0;
+  isRecording = true;
+
+  // Get video duration for frame calculation
+  const currentVideo =
+    videoType === VIDEO_TYPE_UPLOADED ? userVideo : defaultVideo;
+  const videoDuration = currentVideo.duration;
+  const totalFrames = Math.ceil(videoDuration * VIDEO_FPS);
+
+  console.log(
+    `Recording ${totalFrames} frames for ${videoDuration}s video at ${VIDEO_FPS}fps`
+  );
 
   // display user message
+  recordingMessageDiv.innerHTML = `Recording video loop... (0/${totalFrames} frames)`;
   recordingMessageDiv.classList.remove('hidden');
 
   recordVideoState = true;
   const ctx = canvas.getContext('2d', {
-    // This forces the use of a software (instead of hardware accelerated) 2D canvas
-    // This isn't necessary, but produces quicker results
     willReadFrequently: true,
-    // Desynchronizes the canvas paint cycle from the event loop
-    // Should be less necessary with OffscreenCanvas, but with a real canvas you will want this
     desynchronized: true,
   });
 
   muxer = new Mp4Muxer.Muxer({
     target: new Mp4Muxer.ArrayBufferTarget(),
     video: {
-      // If you change this, make sure to change the VideoEncoder codec as well
       codec: 'avc',
       width: videoWidth,
       height: videoHeight,
     },
-
     firstTimestampBehavior: 'offset',
-
-    // mp4-muxer docs claim you should always use this with ArrayBufferTarget
     fastStart: 'in-memory',
   });
 
@@ -915,8 +952,6 @@ async function recordVideoMuxer() {
     error: (e) => console.error(e),
   });
 
-  // This codec should work in most browsers
-  // See https://dmnsgn.github.io/media-codecs for list of codecs and see if your browser supports
   videoEncoder.configure({
     codec: 'avc1.42003e',
     width: videoWidth,
@@ -924,6 +959,89 @@ async function recordVideoMuxer() {
     bitrate: 14_000_000,
     bitrateMode: 'constant',
   });
+
+  // Record frames by seeking to specific timestamps
+  await recordFrameByFrame(currentVideo, totalFrames, videoDuration);
+}
+
+async function recordFrameByFrame(video, totalFrames, videoDuration) {
+  // Pause the normal animation loop during recording
+  const wasPlaying = playAnimationToggle;
+  playAnimationToggle = false;
+  cancelAnimationFrame(animationRequest);
+
+  for (let frame = 0; frame < totalFrames; frame++) {
+    // Calculate exact timestamp for this frame
+    const timestamp = frame / VIDEO_FPS;
+
+    // Seek video to exact timestamp
+    video.currentTime = timestamp;
+
+    // Wait for seek to complete
+    await new Promise((resolve) => {
+      const onSeeked = () => {
+        video.removeEventListener('seeked', onSeeked);
+        resolve();
+      };
+      video.addEventListener('seeked', onSeeked);
+    });
+
+    // Update counter based on frame position for consistent randomness
+    counter = frame;
+
+    // Update lyrics synchronization for this timestamp
+    updateLyricsSync();
+
+    // Calculate oscillation based on video time (not real time)
+    pixelSizeFactor = oscillateByVideoTime(10, 140, 4);
+
+    // Recalculate grid dimensions
+    pixelSize = Math.ceil(
+      Math.min(canvasWidth, canvasHeight) / pixelSizeFactor
+    );
+    numCols = Math.ceil(Math.ceil(canvasWidth / pixelSize) * effectWidth);
+    numRows = Math.ceil(canvasHeight / pixelSize);
+    fontSize = pixelSize / 0.65;
+
+    // Render this frame
+    render(ctx);
+
+    if (effectWidth < 1) {
+      ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
+    }
+
+    renderText();
+
+    // Encode this frame
+    await renderCanvasToVideoFrameAndEncode({
+      canvas,
+      videoEncoder,
+      frameNumber: frame,
+      videofps: VIDEO_FPS,
+    });
+
+    // Update progress
+    recordingMessageDiv.innerHTML = `Recording video loop... (${
+      frame + 1
+    }/${totalFrames} frames)`;
+
+    // Small delay to prevent overwhelming the browser
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+
+  // Restore normal playback
+  if (wasPlaying) {
+    video.currentTime = 0;
+    resetLoop();
+    playAnimationToggle = true;
+    animationRequest = requestAnimationFrame(loop);
+  }
+
+  // Finalize recording
+  autoStopRecording = false;
+  recordVideoState = false;
+  isRecording = false;
+  await finalizeVideo();
 }
 
 // finish and export video
